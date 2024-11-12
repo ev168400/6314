@@ -1,0 +1,14 @@
+.topbar-appBar{ /* styling for the bar */
+  height: 60;
+  justify-content: "center";
+}
+
+.topbar-toolBar{
+  display: "flex";
+  justify-content: "space-between";
+}
+
+.header-right { /* styling for the right side of the header */
+  flex-grow: 1;
+  text-align: right;
+}
