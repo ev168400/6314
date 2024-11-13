@@ -29,7 +29,7 @@
  * /photosOfUser/:id  - Returns an array with all the photos of the User (id).
  *                      Each photo should have all the Comments on the Photo
  *                      (JSON format).
- */
+ */  
 
 const mongoose = require("mongoose");
 mongoose.Promise = require("bluebird");
@@ -61,9 +61,19 @@ mongoose.connect("mongodb://127.0.0.1/project6", {
 // (http://expressjs.com/en/starter/static-files.html) do all the work for us.
 app.use(express.static(__dirname));
 
-//TODO: Not sure if this is the right place to add 
 app.use(session({secret: "secretKey", resave: false, saveUninitialized: false}));
 app.use(bodyParser.json());
+
+app.use((req, res, next) => {
+  if (req.path === '/admin/login' || req.path === '/admin/logout') {
+    next();
+  } else if (req.session.user) {
+    next();
+  } else {
+    res.status(401).json({ error: 'Unauthorized' });
+  }
+});
+
 
 app.get("/", function (request, response) {
   response.send("Simple web server of files from " + __dirname);
@@ -190,6 +200,44 @@ app.get("/photosOfUser/:id", async function (request, response) {
     console.log("Photos for user with _id:" + id + " were not found.");
     return response.status(400).send("Photos for user with _id:" + id + " were not found.");
   }
+});
+
+
+app.post('/admin/login', async (req, res) => {
+  const { login_name } = req.body;
+  
+  try {
+    const user = await User.findOne({ last_name: login_name }, {_id:1, first_name:1, last_name:1});
+    if (!user) {
+      return res.status(400).json({ error: 'Invalid login name' });
+    }
+    res.json(user); 
+    req.session.user = user;
+    await req.session.save();
+    res.redirect(`/users/${req.body._id}`);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error retreiving login details' });
+  }
+  
+});
+
+app.post('/admin/logout', (req, res) => {
+  try {
+    req.session.user = null;
+    req.session.destroy((err) => { 
+      if (err) {
+        res.status(400).json({ error: 'No user is logged in' }); 
+      } else {
+        res.status(200).json({ message: 'Logged out successfully' }); 
+      }
+    });
+    res.redirect('/')
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    res.status(500).json({ error: 'Server error' }); 
+  }
+  
 });
 
 const server = app.listen(3000, function () {

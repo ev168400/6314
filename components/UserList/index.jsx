@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from "react";
+import React, {useState, useEffect, useContext} from "react";
 import { Link } from "react-router-dom";
 import {
   Divider,
@@ -10,8 +10,12 @@ import {
 import axios from 'axios';
 import "./styles.css";
 
+import { CurrentUserContext} from '../../photoShare.jsx';
+
 function UserList() {
   const [users, setUserList] = useState([]);
+  const {currentUser, setCurrentUser} = useContext(CurrentUserContext);
+
   useEffect(() => {
     axios.get('http://localhost:3000/user/list')
       .then(result => {
@@ -20,7 +24,7 @@ function UserList() {
       .catch(error => {
         console.error(error);
       });
-  },[]);
+  },[currentUser]);
  
   return (
     <div>
