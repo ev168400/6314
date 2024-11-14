@@ -48,6 +48,8 @@ const SchemaInfo = require("./schema/schemaInfo.js");
 const session = require("express-session");
 const bodyParser = require("body-parser");
 const multer = require("multer");
+app.use(session({secret: "secretKey", resave: false, saveUninitialized: false}));
+app.use(bodyParser.json());
 
 // XXX - Your submission should work without this line. Comment out or delete
 // this line for tests and before submission!
@@ -61,13 +63,12 @@ mongoose.connect("mongodb://127.0.0.1/project6", {
 // (http://expressjs.com/en/starter/static-files.html) do all the work for us.
 app.use(express.static(__dirname));
 
-app.use(session({secret: "secretKey", resave: false, saveUninitialized: false}));
-app.use(bodyParser.json());
 
-app.use((req, res, next) => {
-  if (req.path === '/admin/login' || req.path === '/admin/logout') {
+
+app.use((request, res, next) => {
+  if (request.path === '/admin/login' || request.path === '/admin/logout') {
     next();
-  } else if (req.session.user) {
+  } else if (request.session.user) {
     next();
   } else {
     res.status(401).json({ error: 'Unauthorized' });
@@ -91,7 +92,7 @@ app.get("/", function (request, response) {
  * /test/counts - Returns an object with the counts of the different collections
  *                in JSON format.
  */
-app.get("/test/:p1", async function (request, response) {
+app.get("/test/:p1",  async function (request, response) {
   // Express parses the ":p1" from the URL and returns it in the request.params
   // objects.
   console.log("/test called with param1 = ", request.params.p1);
@@ -156,7 +157,7 @@ try {
  */
 app.get("/user/list", async function (request, response) {
   try{
-    var userList = await User.find({}, {_id:1, first_name:1, last_name:1}).lean();
+    var userList = await User.find({}, {_id:1, first_name:1, last_name:1});
     return response.status(200).send(userList);
   }catch(err){
     return response.status(500).send("Error fetching user list");
@@ -203,35 +204,37 @@ app.get("/photosOfUser/:id", async function (request, response) {
 });
 
 
-app.post('/admin/login', async (req, res) => {
-  const { login_name } = req.body;
-  
+app.post('/admin/login', async (request, res) => {
+  const { login_name } = request.body;
+  var user = null;
+  var userlist;
   try {
-    const user = await User.findOne({ last_name: login_name }, {_id:1, first_name:1, last_name:1});
-    if (!user) {
-      return res.status(400).json({ error: 'Invalid login name' });
-    }
-    res.json(user); 
-    req.session.user = user;
-    await req.session.save();
-    res.redirect(`/users/${req.body._id}`);
+    userlist = await User.find({}, {_id:1, first_name:1, last_name:1});
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error retreiving login details' });
   }
+  for(const person of userlist){
+    if(person.last_name === login_name){
+      user = person;
+    }
+  }
+  if(user === null){
+      return res.status(400).json({ error: 'Invalid login name' });
+  }
   
+  request.session.user = user;
+  request.session.save();
+  return res.json(user);
 });
 
-app.post('/admin/logout', (req, res) => {
+app.post('/admin/logout', (request, res) => {
+  if(!request.session.user){
+    return res.status(400).json({ error: 'Nobody is logged in' });
+  }
   try {
-    req.session.user = null;
-    req.session.destroy((err) => { 
-      if (err) {
-        res.status(400).json({ error: 'No user is logged in' }); 
-      } else {
-        res.status(200).json({ message: 'Logged out successfully' }); 
-      }
-    });
+    request.session.user = null;
+    request.session.destroy();
     res.redirect('/')
   } catch (err) {
     console.error('Unexpected error:', err);

@@ -19,7 +19,7 @@ function TopBar() {
             setLoggedIn("Please Login");  
         })
         .catch(error => {
-            console.error('Logout failed:', error.data);
+            console.error('Logout failed:', error.response.data.error);
         });
   }
 
@@ -51,8 +51,6 @@ function TopBar() {
   useEffect(()=> {
     if(currentUser !== null){
       setLoggedIn(`Hi ${currentUser.first_name}`);
-    }else{
-      console.log("nobody is logged in");
     }
   }, [currentUser])
 
@@ -68,7 +66,7 @@ function TopBar() {
         <Typography variant="h5" color="inherit">
             {current}
         </Typography>
-        <button onClick={handleLogout}>Logout</button>
+        {!loggedIn !== "Please Login" && <button onClick={handleLogout}>Logout</button>}
       </Toolbar>
     </AppBar>
   );

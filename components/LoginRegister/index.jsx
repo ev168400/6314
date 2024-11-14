@@ -1,5 +1,6 @@
 import React, {useEffect, useState, useContext} from "react";
 import { CurrentUserContext} from '../../photoShare.jsx';
+import { Navigate } from 'react-router-dom';
 import axios from 'axios';
 import "./styles.css";
 
@@ -15,9 +16,11 @@ function LoginRegister(){
         .then(response => {
             console.log('Login successful:', response.data);
             setCurrentUser(response.data);
+            console.log(response.data._id);
+            //<Navigate to={`/user/${response.data._id}`} />
         })
         .catch(error => {
-            console.error('Login failed:', error);
+            console.error('Login failed:', error.response.data.error, ' Status', error.response.status);
         });
     }
     return(

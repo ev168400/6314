@@ -1,4 +1,4 @@
-import React, {useState, createContext, useContext} from "react";
+import React, {useState, createContext, useContext, useEffect} from "react";
 import ReactDOM from "react-dom/client";
 import { Grid, Paper } from "@mui/material";
 import { HashRouter, Route, Routes, useParams, Navigate } from "react-router-dom";
@@ -27,6 +27,11 @@ function UserPhotosRoute() {
 function PhotoShare() {
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  useEffect(()=> {
+    if(currentUser !== null){
+      setIsLoggedIn(true);
+    }
+  }, [currentUser]);
   return (
     <CurrentUserContext.Provider
      value={{currentUser, setCurrentUser}}>
