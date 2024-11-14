@@ -1,0 +1,51 @@
+.error-message{
+    padding: 10px;
+    border-radius: .5rem;
+    background-color: #FF4545;
+    color: white;
+    width: fit-content;
+    font-size: medium;
+}
+
+.login, .register{
+    background: rgba(25,118,210, 0.25);
+    padding: 10px;
+    border-radius: .5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+h2{
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+label{
+    font-size: large;
+    font-weight: bold;
+    margin-top: 0.5rem;
+}
+
+input[type=text], input[type=password], textarea {
+    border-radius: .25rem;
+    padding: 0.5rem;
+    border: 1px solid;
+    margin-bottom: 0.5rem;
+}
+
+input[type=button] {
+    margin-top: 3px;
+    background: rgba(25,118,210, 0.75);
+    border-radius: .5rem;
+    justify-content: center;
+    border: 0;
+    cursor: pointer;
+    font-size: medium;
+    padding: 0.5rem;
+    width:fit-content;
+}
+
+input[type=button]:hover {
+    background: rgba(25,118,210, 1);
+    color: white;
+}

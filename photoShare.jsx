@@ -26,12 +26,7 @@ function UserPhotosRoute() {
 
 function PhotoShare() {
   const [currentUser, setCurrentUser] = useState(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  useEffect(()=> {
-    if(currentUser !== null){
-      setIsLoggedIn(true);
-    }
-  }, [currentUser]);
+  
   return (
     <CurrentUserContext.Provider
      value={{currentUser, setCurrentUser}}>
@@ -50,8 +45,8 @@ function PhotoShare() {
             <Grid item sm={9}>
               <Paper className="main-grid-item">
                 <Routes>
-                  <Route path="/users/:userId" element={isLoggedIn ? <UserDetailRoute /> : <Navigate to="/"/> } />
-                  <Route path="/photos/:userId" element={isLoggedIn ? <UserPhotosRoute />  : <Navigate to="/"/> } />
+                  <Route path="/users/:userId" element={currentUser ? <UserDetailRoute /> : <Navigate to="/" /> } />
+                  <Route path="/photos/:userId" element={currentUser ? <UserPhotosRoute />  : <Navigate to="/" /> } />
                   <Route path="/users" element={<UserList />} />
                   <Route path="/" element={<LoginRegister />} />
                 </Routes>

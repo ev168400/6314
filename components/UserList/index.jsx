@@ -22,7 +22,8 @@ function UserList() {
         setUserList(result.data);
       })
       .catch(error => {
-        console.error(error);
+        setUserList([]);
+        console.error(error.response.data.error);
       });
   },[currentUser]);
  

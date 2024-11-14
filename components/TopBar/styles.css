@@ -6,3 +6,19 @@
   display: flex;
   justify-content: space-between;
 }
+.toolBar-logoutButton {
+  background: #778899;
+  border-radius: .5rem;
+  justify-content: center;
+  border: 0;
+  cursor: pointer;
+  font-size: medium;
+  padding: 0.5rem;
+  width:fit-content;
+  color: white;
+}
+
+.toolBar-logoutButton:hover {
+  color: black;
+  background: #F8F8FF;
+}
