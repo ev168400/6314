@@ -310,6 +310,43 @@ app.post('/user', async (request, res) => {
   
 });
 
+app.post('/commentsOfPhoto/:photo_id', async (request, response) => {
+  const { photo_id } = request.params;
+  const { comment } = request.body;
+
+  // Check if user is logged in
+  if (!request.session.user) {
+    return response.status(401).json({ error: 'Unauthorized' });
+  }
+
+  // Validate comment content
+  if (!comment || comment.trim() === "") {
+    return response.status(400).json({ error: 'Comment cannot be empty' });
+  }
+
+  try {
+    // Find the photo by ID and add the comment
+    const photo = await Photo.findById(photo_id);
+    if (!photo) {
+      return response.status(404).json({ error: 'Photo not found' });
+    }
+
+    // Add the comment to the photo
+    const newComment = {
+      comment: comment,
+      user_id: request.session.user._id, // Add the logged-in user's ID
+      date_time: new Date(),
+    };
+    photo.comments.push(newComment);
+    await photo.save();
+
+    return response.status(200).json({ message: 'Comment added successfully', newComment });
+  } catch (error) {
+    console.error('Error adding comment:', error);
+    return response.status(500).json({ error: 'Server error' });
+  }
+});
+
 const server = app.listen(3000, function () {
   const port = server.address().port;
   console.log(
