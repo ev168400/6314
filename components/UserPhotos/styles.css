@@ -1,0 +1,47 @@
+.userPhotos-photoDate{
+    margin-bottom: 5px;
+}
+
+.userPhotos-comment {
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    background: #F5F5F5;
+    margin: 1rem 0 0 0;
+    width: fit-content;
+}
+.userPhotos-commentHeader {
+    display: flex;
+    flex-direction: row; 
+    align-items: center;
+    justify-content: space-between;
+
+}
+.userPhotos-commentHeaderP{
+    width: fit-content;
+}
+
+.userPhotos-commentHeaderP p{
+    font-size: smaller;
+    font-weight: bold;
+    margin: 0 0 0 20px;
+}
+
+.userPhotos-commentHeaderLink{
+   width: fit-content;
+}
+
+.userPhotos-commentHeaderLink a{
+    text-decoration: none;
+    font-weight: bold;
+    color: black;
+}
+.userPhotos-commentHeaderLink a:hover{
+    cursor: pointer;
+    color: #1976d2;
+}
+
+.userPhotos-commentText{
+    margin: 5px 0 0 0;
+}
+
+ 

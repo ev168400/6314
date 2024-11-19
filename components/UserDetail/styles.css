@@ -1,0 +1,48 @@
+.userDetail-Name{
+    font-weight: bolder;
+    font-size: x-large;
+}
+
+.userDetail-profile{
+    background: rgba(25,118,210, 0.25);
+    padding: 20px;
+    border-radius: .5rem;
+}
+
+.userDetail-col{
+    font-size:medium;
+    font-weight: bold;
+}
+.userDetail-about{
+    font-size: larger;
+    font-weight: bold;
+}
+.userDetail-link{
+    text-decoration: none;
+    color: black;
+}
+.userDetail-gridButton{
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+}
+
+.userDetail-button {
+  background: rgba(25,118,210, 0.75);
+  border-radius: .5rem;
+  justify-content: center;
+  border: 0;
+  cursor: pointer;
+  font-size: medium;
+  padding: 0.5rem;
+  width:fit-content;
+}
+
+.userDetail-button:hover {
+    background: rgba(25,118,210, 1);
+}
+.userDetail-button:hover  .userDetail-link{
+    color: white;
+}
+
+

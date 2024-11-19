@@ -1,0 +1,11 @@
+.listItem:hover{
+    background: rgba(25,118,210, 0.50);
+}
+
+.userList-link{
+    text-decoration: none;
+}
+
+.userList-listItemText{
+    color:black;
+}
