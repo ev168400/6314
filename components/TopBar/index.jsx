@@ -1,15 +1,16 @@
-import React, {useEffect, useState, useContext} from "react";
+import React, {useEffect, useState, useContext, useRef } from "react";
 import { AppBar, Toolbar, Typography } from "@mui/material";
 import { useLocation } from 'react-router-dom';
 import { CurrentUserContext} from '../../photoShare.jsx';
 import axios from 'axios';
 import "./styles.css";
 
-function TopBar() {
+function TopBar({onPhotoUploaded}) {
   const [current, setCurrent] = useState("");
   const [loggedIn, setLoggedIn] = useState("Please Login");
   const {currentUser, setCurrentUser} = useContext(CurrentUserContext);
   const location = useLocation();
+  const uploadInput = useRef(null);
 
   function handleLogout(){
     axios.post('/admin/logout')
@@ -49,14 +50,30 @@ function TopBar() {
       setCurrent("");
     }
   }, [location, currentUser]);
-
-
   
   useEffect(()=> {
     if(currentUser !== null){
       setLoggedIn(`Hi ${currentUser.first_name}`);
     }
   }, [currentUser])
+  
+  const handleUploadButtonClicked = (e) => {
+    e.preventDefault();
+    if (uploadInput.current.files.length > 0) {
+      const domForm = new FormData();
+      domForm.append("uploadedphoto", uploadInput.current.files[0]);
+
+      axios
+        .post("/photos/new", domForm)
+        .then((res) => {
+          console.log("Photo uploaded successfully:", res.data);
+          if (onPhotoUploaded) {
+            onPhotoUploaded();
+          }
+        })
+        .catch((err) => console.error("Error uploading photo:", err));
+    }
+  };
 
   return (
     <AppBar className="topbar-appBar" position="absolute">
@@ -67,7 +84,27 @@ function TopBar() {
         <Typography variant="h5" color="inherit">
             {current}
         </Typography>
-        {loggedIn !== "Please Login" && <button className="toolBar-logoutButton" onClick={handleLogout}>Logout</button>}
+        {loggedIn !== "Please Login" && (
+          <>
+            <input
+              type="file"
+              accept="image/*"
+              ref={uploadInput}
+              style={{ display: "none" }}
+              id="upload-photo-input"
+            />
+            <label htmlFor="upload-photo-input">
+              <button
+                onClick={(e) => {
+                  document.getElementById("upload-photo-input").click();
+                }}
+              >
+                Choose File
+              </button>
+            </label>
+            <button onClick={handleUploadButtonClicked}>Upload Photo</button>
+            <button className="toolBar-logoutButton" onClick={handleLogout}>Logout</button>
+          </>)}
       </Toolbar>
     </AppBar>
   );
