@@ -1,6 +1,7 @@
 import React, {useState, useEffect} from "react";
 import { List } from "@mui/material";
 import { Link } from "react-router-dom";
+import TopBar from '../TopBar';
 import axios from 'axios';
 import "./styles.css";
 
@@ -12,7 +13,10 @@ function formatDate(dateString) {
 
 function UserPhotos({userId}) {
   var [photos, setUserPhotos] = useState([]);
-  useEffect(() => {
+  const [newComments, setNewComments] = useState({});
+
+  // A reusable function to fetch photos
+  const fetchPhotos = () => {
     axios.get(`http://localhost:3000/photosOfUser/${userId}`)
       .then(result => {
         setUserPhotos(result.data);
@@ -20,9 +24,40 @@ function UserPhotos({userId}) {
       .catch(error => {
         console.error(error);
       });
-  },[userId]);
+  };
+
+  // Fetch photos when the component mounts or userId changes
+  useEffect(() => {
+    fetchPhotos();
+  }, [userId]);
+
+  const handleCommentChange = (photoId, value) => {
+    setNewComments({ ...newComments, [photoId]: value });
+  };
+
+  const handleAddComment = async (photoId) => {
+    const comment = newComments[photoId];
+    if (!comment || comment.trim() === "") {
+      alert("Comment cannot be empty");
+      return;
+    }
+
+    try {
+      await axios.post(`http://localhost:3000/commentsOfPhoto/${photoId}`, { comment });
+      // Refresh the photos with the updated comments
+      const result = await axios.get(`http://localhost:3000/photosOfUser/${userId}`);
+      setUserPhotos(result.data);
+      // Clear the input for the commented photo
+      setNewComments({ ...newComments, [photoId]: "" });
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      alert("Failed to add comment");
+    }
+  };
 
   return (
+    <>
+      <TopBar onPhotoUploaded={fetchPhotos} />
       <List>
         {photos.map(photo => (
           <div key={photo._id}>
@@ -45,9 +80,19 @@ function UserPhotos({userId}) {
                 </div>
               ))
             )}
+            <div className="addComment">
+              <input
+                type="text"
+                placeholder="Add a comment"
+                value={newComments[photo._id] || ""}
+                onChange={(e) => handleCommentChange(photo._id, e.target.value)}
+              />
+              <button onClick={() => handleAddComment(photo._id)}>Add Comment</button>
+            </div>
           </div>
         ))}
       </List>
+    </>
   );
 }
 

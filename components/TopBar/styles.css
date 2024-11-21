@@ -6,8 +6,7 @@
   display: flex;
   justify-content: space-between;
 }
-.toolBar-logoutButton {
-  background: #778899;
+.toolBar-logoutButton, .toolBar-photoUpload,  .toolBar-fileUpload{
   border-radius: .5rem;
   justify-content: center;
   border: 0;
@@ -16,6 +15,17 @@
   padding: 0.5rem;
   width:fit-content;
   color: white;
+}
+
+.toolBar-photoUpload,  .toolBar-fileUpload{
+  background: #6495ED;
+}
+.toolBar-photoUpload:hover,  .toolBar-fileUpload:hover{
+  border: solid #00008B;
+}
+
+.toolBar-logoutButton{
+  background: #778899;
 }
 
 .toolBar-logoutButton:hover {

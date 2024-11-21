@@ -62,7 +62,7 @@ function LoginRegister(){
         }
     }
     return(
-        <> 
+        <div className="login-register"> 
             <div className="login">
                 <h2>Login</h2>
                 {errorExistLogin && <p className = "error-message">{errorMessageLogin}</p>}
@@ -95,10 +95,10 @@ function LoginRegister(){
                     <input type="text" id="occupation" name="occupation"/><br/>
                     <label htmlFor="description">Description:</label><br/>
                     <textarea type="text" id="description" name="description" rows="4" cols="50"/><br/>
-                    <input classname="register-button" type="button" value="Register Me" onClick={handleRegister}></input>
+                    <input className="register-button" type="button" value="Register Me" onClick={handleRegister}></input>
                 </form>
             </div>
-        </>
+        </div>
        
     )
 }
