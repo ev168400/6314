@@ -48,6 +48,8 @@ const SchemaInfo = require("./schema/schemaInfo.js");
 const session = require("express-session");
 const bodyParser = require("body-parser");
 const multer = require("multer");
+const fs = require("fs");
+const processFormBody = multer({storage: multer.memoryStorage()}).single('uploadedphoto');
 app.use(session({secret: "secretKey", resave: false, saveUninitialized: false}));
 app.use(bodyParser.json());
 
@@ -346,6 +348,43 @@ app.post('/commentsOfPhoto/:photo_id', async (request, response) => {
     return response.status(500).json({ error: 'Server error' });
   }
 });
+
+app.post('/photos/new', (request, response) => {
+  processFormBody(request, response, function (err) {
+    if (err || !request.file) {
+        return response.status(400).send("No file uploaded");
+    }
+
+    // Generate a unique filename
+    const timestamp = new Date().valueOf();
+    const filename = 'U' + String(timestamp) + request.file.originalname;
+
+    fs.writeFile("./images/" + filename, request.file.buffer, async function (err) {
+        if (err) {
+            return response.status(500).send("Error saving file");
+        }
+
+        try {
+            // Create a new Photo object
+            const newPhoto = new Photo({
+                file_name: filename,
+                date_time: new Date(),
+                user_id: request.session.user_id,
+            });
+
+            // Save the photo using async/await
+            await newPhoto.save();
+
+            // Respond to the client
+            response.status(200).send({ success: true, photo: newPhoto });
+        } catch (dbError) {
+            console.error("Error saving photo to database:", dbError);
+            response.status(500).send("Error saving photo to database");
+        }
+    });
+  });
+});
+
 
 const server = app.listen(3000, function () {
   const port = server.address().port;
