@@ -7,12 +7,19 @@
     font-size: medium;
 }
 
+.login-register{
+    display: flex;
+    flex-direction: row;
+}
+
 .login, .register{
     background: rgba(25,118,210, 0.25);
     padding: 10px;
     border-radius: .5rem;
     display: flex;
     flex-direction: column;
+    margin: 0 auto auto auto;
+    width: 40%;
 }
 
 h2{
@@ -31,6 +38,7 @@ input[type=text], input[type=password], textarea {
     padding: 0.5rem;
     border: 1px solid;
     margin-bottom: 0.5rem;
+    width: 95%;
 }
 
 input[type=button] {

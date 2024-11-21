@@ -369,9 +369,8 @@ app.post('/photos/new', (request, response) => {
             const newPhoto = new Photo({
                 file_name: filename,
                 date_time: new Date(),
-                user_id: request.session.user_id,
+                user_id: request.session.user._id,
             });
-
             // Save the photo using async/await
             await newPhoto.save();
 
