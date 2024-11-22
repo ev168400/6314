@@ -355,7 +355,7 @@ app.post('/photos/new', (request, response) => {
         return response.status(400).send("No file uploaded");
     }
 
-    // Generate a unique filename
+    //unique file name
     const timestamp = new Date().valueOf();
     const filename = 'U' + String(timestamp) + request.file.originalname;
 
@@ -365,16 +365,16 @@ app.post('/photos/new', (request, response) => {
         }
 
         try {
-            // Create a new Photo object
+            //create photo object
             const newPhoto = new Photo({
                 file_name: filename,
                 date_time: new Date(),
                 user_id: request.session.user._id,
             });
-            // Save the photo using async/await
+            //save photo object
             await newPhoto.save();
 
-            // Respond to the client
+            //return status
             response.status(200).send({ success: true, photo: newPhoto });
         } catch (dbError) {
             console.error("Error saving photo to database:", dbError);
@@ -383,7 +383,6 @@ app.post('/photos/new', (request, response) => {
     });
   });
 });
-
 
 const server = app.listen(3000, function () {
   const port = server.address().port;
