@@ -376,8 +376,8 @@ app.post('/photos/new', (request, response) => {
 
             //return status
             response.status(200).send({ success: true, photo: newPhoto });
-        } catch (dbError) {
-            console.error("Error saving photo to database:", dbError);
+        } catch (err) {
+            console.error("Error saving photo to database:", err);
             response.status(500).send("Error saving photo to database");
         }
     });
