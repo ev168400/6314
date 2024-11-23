@@ -350,7 +350,7 @@ app.post('/photos/new', (request, response) => {
         return response.status(400).send("No file uploaded");
     }
 
-    // Generate a unique filename
+    //unique file name
     const timestamp = new Date().valueOf();
     const filename = 'U' + String(timestamp) + request.file.originalname;
 
@@ -382,7 +382,7 @@ app.post('/photos/new', (request, response) => {
       console.error(error);
       return response.status(500).send("Error saving photo");  
     }
-    
+
   });
 });
 
