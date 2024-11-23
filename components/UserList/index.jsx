@@ -10,11 +10,11 @@ import {
 import axios from 'axios';
 import "./styles.css";
 
-import { CurrentUserContext} from '../../photoShare.jsx';
+import { CurrentUserContext } from "../context/context.js";
 
 function UserList() {
   const [users, setUserList] = useState([]);
-  const {currentUser, setCurrentUser} = useContext(CurrentUserContext);
+  const {currentUser} = useContext(CurrentUserContext);
 
   useEffect(() => {
     axios.get('http://localhost:3000/user/list')

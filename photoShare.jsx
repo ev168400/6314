@@ -1,4 +1,4 @@
-import React, {useState, createContext, useContext, useEffect} from "react";
+import React, {useState, useMemo} from "react";
 import ReactDOM from "react-dom/client";
 import { Grid, Paper } from "@mui/material";
 import { HashRouter, Route, Routes, useParams, Navigate } from "react-router-dom";
@@ -9,8 +9,7 @@ import UserDetail from "./components/UserDetail";
 import UserList from "./components/UserList";
 import UserPhotos from "./components/UserPhotos";
 import LoginRegister from "./components/LoginRegister";
-
-export const CurrentUserContext = createContext(null); 
+import { CurrentUserContext } from "./components/context/context";
 
 function UserDetailRoute() {
   const {userId} = useParams();
@@ -26,10 +25,11 @@ function UserPhotosRoute() {
 
 function PhotoShare() {
   const [currentUser, setCurrentUser] = useState(null);
+  const contextValue = useMemo(() => ({ currentUser, setCurrentUser }), [currentUser]);
   
   return (
     <CurrentUserContext.Provider
-     value={{currentUser, setCurrentUser}}>
+     value={contextValue}>
       <HashRouter>
         <div>
           <Grid container spacing={2}>

@@ -39,16 +39,18 @@ mongoose.Promise = require("bluebird");
 const express = require("express");
 const app = express();
 
-// Load the Mongoose schema for User, Photo, and SchemaInfo
-const User = require("./schema/user.js");
-const Photo = require("./schema/photo.js");
-const SchemaInfo = require("./schema/schemaInfo.js");
-
 //Express Middleware
 const session = require("express-session");
 const bodyParser = require("body-parser");
 const multer = require("multer");
 const fs = require("fs");
+
+// Load the Mongoose schema for User, Photo, and SchemaInfo
+const User = require("./schema/user.js");
+const Photo = require("./schema/photo.js");
+const SchemaInfo = require("./schema/schemaInfo.js");
+
+
 const processFormBody = multer({storage: multer.memoryStorage()}).single('uploadedphoto');
 app.use(session({secret: "secretKey", resave: false, saveUninitialized: false}));
 app.use(bodyParser.json());
@@ -67,13 +69,13 @@ app.use(express.static(__dirname));
 
 
 
-app.use((request, res, next) => {
+app.use((request, response, next) => {
   if (request.path === '/admin/login' || request.path === '/admin/logout' || request.path === '/user') {
     next();
   } else if (request.session.user) {
     next();
   } else {
-    res.status(401).json({ error: 'Unauthorized' });
+    response.status(401).json({ error: 'Unauthorized' });
   }
 });
 
@@ -206,7 +208,7 @@ app.get("/photosOfUser/:id", async function (request, response) {
 });
 
 
-app.post('/admin/login', async (request, res) => {
+app.post('/admin/login', async (request, response) => {
   const { login_name, password } = request.body;
   var invalid = "User does not exist";
   var user = null;
@@ -215,7 +217,7 @@ app.post('/admin/login', async (request, res) => {
     userlist = await User.find({}, {_id:1, first_name:1, last_name:1, login_name:1, password:1});
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Server error retreiving login details' });
+    response.status(500).json({ error: 'Server error retreiving login details' });
   }
   for(const person of userlist){
     if(person.login_name === login_name && person.password === password){
@@ -225,30 +227,29 @@ app.post('/admin/login', async (request, res) => {
     }
   }
   if(user === null){
-      return res.status(400).json({ error: invalid });
+      return response.status(400).json({ error: invalid });
   }
   
   request.session.user = user;
   request.session.save();
-  return res.json({ _id: user._id, first_name: user.first_name, last_name: user.last_name });
+  return response.json({ _id: user._id, first_name: user.first_name, last_name: user.last_name });
 });
 
-app.post('/admin/logout', (request, res) => {
+app.post('/admin/logout', (request, response) => {
   if(!request.session.user){
-    return res.status(400).json({ error: 'Nobody is logged in' });
+    return response.status(400).json({ error: 'Nobody is logged in' });
   }
   try {
     request.session.user = null;
     request.session.destroy();
-    res.redirect('/')
+    return response.redirect('/');
   } catch (err) {
     console.error('Unexpected error:', err);
-    res.status(500).json({ error: 'Server error' }); 
+    return response.status(500).json({ error: 'Server error' }); 
   }
-  
 });
 
-app.post('/user', async (request, res) => {
+app.post('/user', async (request, response) => {
   const { login_name, password , first_name, last_name, location , occupation , description } = request.body;
   var user = null;
   var userlist;
@@ -268,48 +269,42 @@ app.post('/user', async (request, res) => {
   }
   
   if (emptyFields.length > 0) {
-    return res.status(400).json({ error: `Please fill in the following fields: ${emptyFields.join(', ')}` });
+    return response.status(400).json({ error: `Please fill in the following fields: ${emptyFields.join(', ')}` });
   }
   try {
     userlist = await User.find({}, {_id:1, first_name:1, last_name:1, login_name:1, password:1});
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Server error retreiving login details' });
+    response.status(500).json({ error: 'Server error retreiving login details' });
   }
   for(const person of userlist){
     if(person.login_name === login_name){
-      return res.status(400).json({error: "Username already exist"})
+      return response.status(400).json({error: "Username already exist"});
     }
   }
   user = { first_name: first_name, last_name: last_name, login_name: login_name, password: password, location: location, occupation: occupation, description: description};
-  await User.create({
-    first_name: user.first_name,
-    last_name: user.last_name,
-    location: user.location,
-    description: user.description,
-    occupation: user.occupation,
-    login_name: user.login_name,
-    password: user.password,
-  })
-    .then(function (userObj) {
-      // Set the unique ID of the object. We use the MongoDB generated _id
-      // for now but we keep it distinct from the MongoDB ID so we can go to
-      // something prettier in the future since these show up in URLs, etc.
-      userObj.save();
-      user.objectID = userObj._id;
-      console.log(
-        "Adding user:",
-        user.first_name + " " + user.last_name,
-        " with ID ",
-        user.objectID
-      );
-
-      return res.json(user);
-    })
-    .catch(function (err) {
-      console.error("Error create user", err);
-    });
   
+  try{
+    const newUser = await User.create({
+      first_name: user.first_name,
+      last_name: user.last_name,
+      location: user.location,
+      description: user.description,
+      occupation: user.occupation,
+      login_name: user.login_name,
+      password: user.password,
+    });
+    user.objectID = newUser._id;
+    console.log(
+      "Adding user:",
+      user.first_name + " " + user.last_name,
+      " with ID ",
+      user.objectID
+    );
+    return response.json(user);
+  }catch(err){
+    return response.status(400).json({error: "Error creating the user"});
+  }
 });
 
 app.post('/commentsOfPhoto/:photo_id', async (request, response) => {
@@ -350,7 +345,7 @@ app.post('/commentsOfPhoto/:photo_id', async (request, response) => {
 });
 
 app.post('/photos/new', (request, response) => {
-  processFormBody(request, response, function (err) {
+  processFormBody(request, response, async function (err) {
     if (err || !request.file) {
         return response.status(400).send("No file uploaded");
     }
@@ -359,28 +354,35 @@ app.post('/photos/new', (request, response) => {
     const timestamp = new Date().valueOf();
     const filename = 'U' + String(timestamp) + request.file.originalname;
 
-    fs.writeFile("./images/" + filename, request.file.buffer, async function (err) {
-        if (err) {
-            return response.status(500).send("Error saving file");
-        }
+    try {
+      // Write the file to the server
+      await new Promise((resolve, reject) => {
+        fs.writeFile("./images/" + filename, request.file.buffer, function (error) {
+          if (error) {
+            reject(new Error("Error saving file"));  
+          } else {
+            resolve();  
+          }
+        });
+      });
 
-        try {
-            //create photo object
-            const newPhoto = new Photo({
-                file_name: filename,
-                date_time: new Date(),
-                user_id: request.session.user._id,
-            });
-            //save photo object
-            await newPhoto.save();
+      // Create a new Photo object
+      const newPhoto = new Photo({
+        file_name: filename,
+        date_time: new Date(),
+        user_id: request.session.user._id,
+      });
 
-            //return status
-            response.status(200).send({ success: true, photo: newPhoto });
-        } catch (err) {
-            console.error("Error saving photo to database:", err);
-            response.status(500).send("Error saving photo to database");
-        }
-    });
+      // Save the photo 
+      await newPhoto.save();
+
+      // Respond to the client
+      return response.status(200).send({ success: true, photo: newPhoto });
+    } catch (error) {
+      console.error(error);
+      return response.status(500).send("Error saving photo");  
+    }
+
   });
 });
 

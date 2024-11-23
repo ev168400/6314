@@ -1,14 +1,18 @@
 import React, { useEffect, useState, useContext, useRef } from "react";
 import { AppBar, Toolbar, Typography } from "@mui/material";
 import { useLocation } from "react-router-dom";
-import { CurrentUserContext } from "../../photoShare.jsx";
 import axios from "axios";
 import "./styles.css";
+
+import { CurrentUserContext } from "../context/context.js";
+
 
 function TopBar({ onPhotoUploaded }) {
   const [current, setCurrent] = useState("");
   const [loggedIn, setLoggedIn] = useState("Please Login");
   const [fileName, setFileName] = useState(""); 
+  const [fileUploaded, setFileUploaded] = useState(false);
+  const [fileFailure, setFileFailure] = useState(false);
   const { currentUser, setCurrentUser } = useContext(CurrentUserContext);
   const location = useLocation();
   const uploadInput = useRef(null);
@@ -16,8 +20,8 @@ function TopBar({ onPhotoUploaded }) {
   function handleLogout() {
     axios
       .post("/admin/logout")
-      .then((response) => {
-        console.log("Logout successful:");
+      .then(() => {
+        console.log("Logout successful");
         setCurrentUser(null);
         setLoggedIn("Please Login");
       })
@@ -63,11 +67,26 @@ function TopBar({ onPhotoUploaded }) {
       setLoggedIn(`Hi ${currentUser.first_name}`);
     }
   }, [currentUser]);
+  
+  function showSuccess(){
+    setFileUploaded(true);
+    setTimeout(() => {
+      setFileUploaded(false);
+    }, 3000);
+  }
+  function showFailure(){
+    setFileFailure(true);
+    setTimeout(() => {
+      setFileFailure(false);
+    }, 3000);
+  }
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       setFileName(file.name); 
+    }else{
+      showFailure();
     }
   };
 
@@ -82,12 +101,16 @@ function TopBar({ onPhotoUploaded }) {
         .post("/photos/new", domForm)
         .then((res) => {
           console.log("Photo uploaded successfully:", res.data);
+          showSuccess();
           setFileName("");
           if (onPhotoUploaded) {
             onPhotoUploaded();
           }
         })
-        .catch((err) => console.error("Error uploading photo:", err));
+        .catch((err) => {
+          console.error("Error uploading photo:", err);
+          showFailure();
+        });
     }
   };
 
@@ -113,7 +136,7 @@ function TopBar({ onPhotoUploaded }) {
             <label htmlFor="upload-photo-input">
               <button
                 className="toolBar-fileUpload"
-                onClick={(e) => {
+                onClick={() => {
                   document.getElementById("upload-photo-input").click();
                 }}
               >
@@ -123,6 +146,8 @@ function TopBar({ onPhotoUploaded }) {
 
             {fileName && <span>{fileName}</span>} 
             {fileName && <button className="toolBar-photoUpload" onClick={handleUploadButtonClicked}> Upload Photo </button>}
+            {fileUploaded && <p className = "success-message">Photo Uploaded Successfully</p>}
+            {fileFailure && <p className = "failure-message">Photo Upload Failed</p>}
 
             <button className="toolBar-logoutButton" onClick={handleLogout}>
               Logout
