@@ -1,7 +1,6 @@
 import React, {useState, useEffect} from "react";
 import { List } from "@mui/material";
 import { Link } from "react-router-dom";
-import TopBar from '../TopBar';
 import axios from 'axios';
 import "./styles.css";
 
@@ -14,6 +13,7 @@ function formatDate(dateString) {
 function UserPhotos({userId}) {
   var [photos, setUserPhotos] = useState([]);
   const [newComments, setNewComments] = useState({});
+  const [photoErrors, setPhotoErrors] = useState({});
 
   // A reusable function to fetch photos
   const fetchPhotos = () => {
@@ -38,9 +38,22 @@ function UserPhotos({userId}) {
   const handleAddComment = async (photoId) => {
     const comment = newComments[photoId];
     if (!comment || comment.trim() === "") {
-      alert("Comment cannot be empty");
+      setPhotoErrors((prevErrors) => ({
+        ...prevErrors,
+        [photoId]: "Comment cannot be empty",
+      }));
+
+      setTimeout(() => {
+        setPhotoErrors((prevErrors) => {
+          const newErrors = { ...prevErrors };
+          delete newErrors[photoId]; 
+          return newErrors;
+        });
+      }, 3000);
+
       return;
     }
+    
 
     try {
       await axios.post(`http://localhost:3000/commentsOfPhoto/${photoId}`, { comment });
@@ -51,13 +64,22 @@ function UserPhotos({userId}) {
       setNewComments({ ...newComments, [photoId]: "" });
     } catch (error) {
       console.error("Error adding comment:", error);
-      alert("Failed to add comment");
+      setPhotoErrors((prevErrors) => ({
+        ...prevErrors,
+        [photoId]: "Failed to add comment",
+      }));
+
+      setTimeout(() => {
+        setPhotoErrors((prevErrors) => {
+          const newErrors = { ...prevErrors };
+          delete newErrors[photoId]; 
+          return newErrors;
+        });
+      }, 3000);
     }
   };
 
   return (
-    <>
-      <TopBar onPhotoUploaded={fetchPhotos} />
       <List>
         {photos.map(photo => (
           <div key={photo._id}>
@@ -88,11 +110,13 @@ function UserPhotos({userId}) {
                 onChange={(e) => handleCommentChange(photo._id, e.target.value)}
               />
               <button onClick={() => handleAddComment(photo._id)}>Add Comment</button>
+              {photoErrors[photo._id] && (
+                <p className="failure-message">{photoErrors[photo._id]}</p>
+              )}
             </div>
           </div>
         ))}
       </List>
-    </>
   );
 }
 

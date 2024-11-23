@@ -1,11 +1,11 @@
-import React, {useEffect, useState, useContext, useRef} from "react";
-import { CurrentUserContext} from '../../photoShare.jsx';
+import React, {useState, useContext} from "react";
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { CurrentUserContext } from "../context/context.js";
 import "./styles.css";
 
 function LoginRegister(){
-    const {currentUser, setCurrentUser} = useContext(CurrentUserContext);
+    const {setCurrentUser} = useContext(CurrentUserContext);
     const [errorExistLogin, setErrorExistLogin] = useState(false);
     const [errorMessageLogin, setErrorMessageLogin] = useState("");
     const [errorExist, setErrorExist] = useState(false);
@@ -17,18 +17,22 @@ function LoginRegister(){
 
         const loginNameInput = document.getElementById("login_name").value;
         const passwordInput = document.getElementById("pwd").value;
-
-        axios.post('/admin/login', { login_name: loginNameInput, password: passwordInput })
-        .then(response => {
-            console.log('Login successful:', response.data);
-            setCurrentUser(response.data);
-            navigate(`/users/${response.data._id}`);
-        })
-        .catch(error => {
+        if(passwordInput === "" || loginNameInput === ""){
             setErrorExistLogin(true);
-            setErrorMessageLogin(error.response.data.error, ". Please try again");
-            console.error('Login failed:', error.response.data.error, ' Status', error.response.status);
-        });
+            setErrorMessageLogin(loginNameInput === "" ? "Name cannot be empty" : "Password cannot be empty");
+        }else{
+            axios.post('/admin/login', { login_name: loginNameInput, password: passwordInput })
+            .then(response => {
+                console.log('Login successful:', response.data);
+                setCurrentUser(response.data);
+                navigate(`/users/${response.data._id}`);
+            })
+            .catch(error => {
+                setErrorExistLogin(true);
+                setErrorMessageLogin(error.response.data.error, ". Please try again");
+                console.error('Login failed:', error.response.data.error, ' Status', error.response.status);
+            });
+        }
     }
 
     function handleRegister(){
@@ -71,7 +75,7 @@ function LoginRegister(){
                     <input type="text" id="login_name" name="login_name"/><br/>
                     <label htmlFor="pwd">Password:</label><br/>
                     <input type="password" id="pwd" name="pwd"/><br/>
-                    <input classname="login-button" type="button" value="Login" onClick={handleLogin}></input>
+                    <input className="login-button" type="button" value="Login" onClick={handleLogin}></input>
                 </form>
             </div>
             <br/>
@@ -100,7 +104,7 @@ function LoginRegister(){
             </div>
         </div>
        
-    )
+    );
 }
 
 export default LoginRegister;

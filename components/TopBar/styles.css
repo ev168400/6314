@@ -32,3 +32,19 @@
   color: black;
   background: #F8F8FF;
 }
+
+.success-message, .failure-message{
+  padding: 10px;
+  border-radius: .5rem;
+  color: white;
+  width: fit-content;
+  font-size: medium;
+}
+
+.success-message{
+  background-color: green;
+}
+
+.failure-message{
+  background-color: #FF4545;
+}
