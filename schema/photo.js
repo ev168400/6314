@@ -3,6 +3,17 @@
 const mongoose = require("mongoose");
 
 /**
+ * Define the Mongoose Schema for a Mention.
+ */
+const mentionSchema = new mongoose.Schema({
+  _id: mongoose.Schema.Types.ObjectId,
+  // The text of the comment.
+  comment: String,
+  // The ID of the user who was mentioned in the comment.
+  mentioned_id: mongoose.Schema.Types.ObjectId,
+});
+
+/**
  * Define the Mongoose Schema for a Comment.
  */
 const commentSchema = new mongoose.Schema({
@@ -26,6 +37,8 @@ const photoSchema = new mongoose.Schema({
   user_id: mongoose.Schema.Types.ObjectId,
   // Array of comment objects representing the comments made on this photo.
   comments: [commentSchema],
+  // Array of @mentions on this photo
+  mentions: [mentionSchema],
 });
 
 /**
