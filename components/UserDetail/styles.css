@@ -17,6 +17,12 @@
     font-size: larger;
     font-weight: bold;
 }
+
+.userDetail-mentions{
+    font-size: larger;
+    font-weight: bold;
+    margin-top: 25px;
+}
 .userDetail-link{
     text-decoration: none;
     color: black;
@@ -45,4 +51,46 @@
     color: white;
 }
 
+.userDetail-mention-Photo {
+    width: 100px;
+    height: 100px; 
+    object-fit: cover; 
+    border-radius: 8px; 
+    margin-top: 0.5rem;
+}
+
+.userDetail-mention-Photo:hover {
+    border: 3px solid rgba(25,118,210, 1);
+}
+
+.userDetail-mention-Photo-Header{
+    margin: 0.5rem auto 0.5rem 0.5rem;
+    font-weight: lighter;
+}
+
+.userDetail-mention-Photo-Name{
+    font-weight: bold;
+    color: black;
+    text-decoration: none;
+}
+.userDetail-mention-Photo-Name:hover{
+    color: rgba(25,118,210, 1);
+    font-size: large;
+}
+
+.userDetail-mention-at{
+    font-weight: bold;
+}
+
+.userDetail-mentionDiv{
+    width: 100%;
+}
+
+.userDetail-noMention{
+    padding-left: 1rem;
+}
+
+.userDetail-mention-comment{
+    margin-left: 1rem;
+}
 

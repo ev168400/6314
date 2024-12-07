@@ -51,5 +51,15 @@
     color: white;
     width: fit-content;
     font-size: medium;
-  }
+}
+
+.userPhotos-mention-link{
+    text-decoration: none;
+    color: rgba(25,118,210, 1);
+}
+
+.userPhotos-mention-link:hover{
+    font-weight: bolder;
+}
+
  

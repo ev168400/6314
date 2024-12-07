@@ -14,6 +14,7 @@ function UserPhotos({userId}) {
   var [photos, setUserPhotos] = useState([]);
   const [newComments, setNewComments] = useState({});
   const [photoErrors, setPhotoErrors] = useState({});
+  var [users, setUsers] = useState([]);
 
   // A reusable function to fetch photos
   const fetchPhotos = () => {
@@ -26,15 +27,83 @@ function UserPhotos({userId}) {
       });
   };
 
+  //Fetches all users
+  const fetchUsers = () =>{
+    axios.get('http://localhost:3000/user/list')
+      .then(result => {
+        setUsers(result.data);
+      })
+      .catch(error => {
+        console.error(error);
+      });
+  };
+
+  //Returns user who matches the name provided or returns false if no user matches the name
+  const getUser = (name) =>{
+    name = name.toLowerCase();
+    for(let user of users){
+      let combined = user.first_name.toLowerCase() + user.last_name.toLowerCase();
+      if(user.first_name.toLowerCase() === name || user.last_name.toLowerCase() === name || combined === name){
+        return user;
+      }
+    }
+    return false;
+  };
+  
+  //Adds link to comment with an @
+  const formatComment = (comment) =>{
+    let commentSplit = comment.split(' ');
+    let formattedComment = [];
+    for(let mention of commentSplit){
+      if(mention.startsWith('@')){
+        const mentionedUser = getUser(mention.substring(1));
+        if(mentionedUser){
+          formattedComment.push(
+            <Link key={mentionedUser._id} className="userPhotos-mention-link" to={`/users/${mentionedUser._id}`}>
+              {mention}
+            </Link>
+          );
+        }else{
+          formattedComment.push(mention);
+        }
+      }else{
+        formattedComment.push(mention);
+      }
+      formattedComment.push(' ');
+    }
+    return <p className="userPhotos-commentText">{formattedComment}</p>;
+  };
+
+  const scrollToPhoto = (photoId) => {
+    const photoElement = document.getElementById(photoId); 
+    if (photoElement) {
+      photoElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start', 
+      });
+    }else{
+      console.log("nope");
+    }
+  };
+
   // Fetch photos when the component mounts or userId changes
   useEffect(() => {
     fetchPhotos();
+    fetchUsers();
+
+    const fullUrl = window.location.href;
+    const hashed = fullUrl.split('#');
+    if (hashed[2]) {
+      setTimeout(() => {
+        scrollToPhoto(hashed[2]); 
+      }, 500); 
+    }
   }, [userId]);
 
   const handleCommentChange = (photoId, value) => {
     setNewComments({ ...newComments, [photoId]: value });
   };
-
+ 
   const handleAddComment = async (photoId) => {
     const comment = newComments[photoId];
     if (!comment || comment.trim() === "") {
@@ -53,6 +122,40 @@ function UserPhotos({userId}) {
 
       return;
     }
+    let commentSplit = comment.split(' ');
+    const mentionPromises = commentSplit.map(async (word) => {
+      if(word.startsWith('@')) {
+        let mentionedUser = getUser(word.substring(1));
+        if(mentionedUser) {
+          let mention = {
+            comment: comment,
+            mentioned_id: mentionedUser._id,
+          };
+  
+          try {
+            await axios.post(`http://localhost:3000/mention/${photoId}`, { mention });
+          } catch (error) {
+            console.error("Error adding mention:", error);
+            setPhotoErrors((prevErrors) => ({
+              ...prevErrors,
+              [photoId]: "Failed to add mention",
+            }));
+          
+            setTimeout(() => {
+              setPhotoErrors((prevErrors) => {
+                const newErrors = { ...prevErrors };
+                delete newErrors[photoId]; 
+                return newErrors; 
+              });
+            }, 3000);
+          }
+        }
+      }
+    });
+  
+    // Wait for all mentions to be processed concurrently
+    await Promise.all(mentionPromises);
+  
     
 
     try {
@@ -84,7 +187,7 @@ function UserPhotos({userId}) {
         {photos.map(photo => (
           <div key={photo._id}>
             <p className="userPhotos-photoDate">{formatDate(photo.date_time)}</p>
-            <img src={`/images/${photo.file_name}`}/>
+            <img src={`/images/${photo.file_name}`} id={`photo-${photo._id}`}/>
             {"comments" in photo && (
               photo.comments.map(comment => (
                 <div key={comment._id} className="userPhotos-comment">
@@ -97,7 +200,7 @@ function UserPhotos({userId}) {
                     </div>
                   </div>
                   <div>
-                    <p className="userPhotos-commentText">{comment.comment}</p>
+                    {formatComment(comment.comment)}
                   </div>
                 </div>
               ))

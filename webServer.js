@@ -207,6 +207,35 @@ app.get("/photosOfUser/:id", async function (request, response) {
   }
 });
 
+/**
+ * URL /mentionsOfUser/:id - Returns all photos with mentions of User (id).
+ */
+app.get("/mentionsOfUser/:id", async function (request, response) {
+  const id = request.params.id;
+  try{
+    var allPhotos = await Photo.find({}, {_id:1, user_id:1, comments:1, file_name:1, date_time:1, mentions:1});
+    var mentionedPhotos = [];
+
+    for(let photo of allPhotos){
+      for(let mention of photo.mentions){
+        if(mention.mentioned_id.toString() === id){
+          let newMention = {
+            _id: mention._id,
+            comment: mention.comment,
+            photo: photo
+          };
+          mentionedPhotos.push(newMention);
+        }
+      }
+    }
+    
+    return response.status(200).send(mentionedPhotos);
+  }catch(err){
+    console.log("Mentions of user with _id:" + id + " were not found.");
+    return response.status(400).send("Mentions of user with _id:" + id + " were not found.");
+  }
+});
+
 
 app.post('/admin/login', async (request, response) => {
   const { login_name, password } = request.body;
@@ -340,6 +369,35 @@ app.post('/commentsOfPhoto/:photo_id', async (request, response) => {
     return response.status(200).json({ message: 'Comment added successfully', newComment });
   } catch (error) {
     console.error('Error adding comment:', error);
+    return response.status(500).json({ error: 'Server error' });
+  }
+});
+
+// URL /mention/:photo_id - updates the photo object to include the most recent @ mention
+app.post('/mention/:photo_id', async (request, response) => {
+  const { photo_id } = request.params;
+  const { mention } = request.body; 
+
+
+  try {
+    // Find the photo by ID and add the mention
+    const photo = await Photo.findById(photo_id);
+    if (!photo) {
+      return response.status(404).json({ error: 'Photo not found' });
+    }
+
+    // Add the mention to the photo
+    const newMention = {
+      _id: new mongoose.Types.ObjectId(),
+      comment: mention.comment,
+      mentioned_id: mention.mentioned_id
+    }; 
+    newMention._id = newMention._id.toString();
+    photo.mentions.push(newMention);
+    await photo.save();
+    return response.status(200).json({ message: 'Mention added successfully', newMention });
+  } catch (error) {
+    console.error('Error adding mention:', error);
     return response.status(500).json({ error: 'Server error' });
   }
 });
