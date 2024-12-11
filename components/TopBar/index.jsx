@@ -65,6 +65,8 @@ function TopBar({ onPhotoUploaded }) {
   useEffect(() => {
     if (currentUser !== null) {
       setLoggedIn(`Hi ${currentUser.first_name}`);
+    }else{
+      setLoggedIn("Please Login");
     }
   }, [currentUser]);
   

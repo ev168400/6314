@@ -1,8 +1,10 @@
-import React, {useState, useEffect} from "react";
+import React, {useState, useEffect, useContext} from "react";
 import { List } from "@mui/material";
 import { Link } from "react-router-dom";
 import axios from 'axios';
 import "./styles.css";
+
+import { CurrentUserContext } from "../context/context.js";
 
 function formatDate(dateString) {
   const date = new Date(dateString);
@@ -15,6 +17,9 @@ function UserPhotos({userId}) {
   const [newComments, setNewComments] = useState({});
   const [photoErrors, setPhotoErrors] = useState({});
   var [users, setUsers] = useState([]);
+  const { currentUser } = useContext(CurrentUserContext);
+
+
 
   // A reusable function to fetch photos
   const fetchPhotos = () => {
@@ -27,11 +32,42 @@ function UserPhotos({userId}) {
       });
   };
 
-  //Fetches all users
+  //Fetches all users 
   const fetchUsers = () =>{
     axios.get('http://localhost:3000/user/list')
       .then(result => {
         setUsers(result.data);
+      })
+      .catch(error => {
+        console.error(error);
+      });
+  };
+
+  const deletePhoto = (photoId) => {
+    axios.delete(`http://localhost:3000/photo/${photoId}`)
+      .then(() => {
+        console.log("photo Deleted");
+        setUserPhotos((prevPhotos) => prevPhotos.filter((photo) => photo._id !== photoId));
+      })
+      .catch(error => {
+        console.error(error);
+      });
+  };
+
+  const deleteComment = (commentId, photoId) => {
+    axios.delete(`http://localhost:3000/photo/${photoId}/comment/${commentId}`)
+      .then(() => {
+        console.log("comment Deleted", userId);
+        setUserPhotos((prevPhotos) => prevPhotos.map((photo) => {
+          if (photo._id === photoId) {
+            return { 
+              ...photo, 
+              comments: photo.comments.filter((comment) => comment._id !== commentId)
+            };
+          } else {
+            return photo;
+          }
+        }));
       })
       .catch(error => {
         console.error(error);
@@ -100,6 +136,14 @@ function UserPhotos({userId}) {
     }
   }, [userId]);
 
+  const handlePhotoDelete = (photoId) => {
+    deletePhoto(photoId);
+  };
+
+  const handleCommentDelete = (commentId, photoId) =>{
+    deleteComment(commentId, photoId);
+  };
+
   const handleCommentChange = (photoId, value) => {
     setNewComments({ ...newComments, [photoId]: value });
   };
@@ -130,6 +174,7 @@ function UserPhotos({userId}) {
           let mention = {
             comment: comment,
             mentioned_id: mentionedUser._id,
+            commenter_id: currentUser._id,
           };
   
           try {
@@ -153,10 +198,8 @@ function UserPhotos({userId}) {
       }
     });
   
-    // Wait for all mentions to be processed concurrently
+    // Wait for all mentions to be processed 
     await Promise.all(mentionPromises);
-  
-    
 
     try {
       await axios.post(`http://localhost:3000/commentsOfPhoto/${photoId}`, { comment });
@@ -183,20 +226,32 @@ function UserPhotos({userId}) {
   };
 
   return (
-      <List>
+      <List> 
         {photos.map(photo => (
           <div key={photo._id}>
-            <p className="userPhotos-photoDate">{formatDate(photo.date_time)}</p>
+            <div className="userPhotos-photo-header">
+              <p className="userPhotos-photoDate">{formatDate(photo.date_time)}</p>
+              {currentUser._id === userId && (
+                  <img className="delete-photo-icon" src="images\trash-can.png" onClick={() => handlePhotoDelete(photo._id)}/>
+              )}
+            </div>
             <img src={`/images/${photo.file_name}`} id={`photo-${photo._id}`}/>
             {"comments" in photo && (
               photo.comments.map(comment => (
                 <div key={comment._id} className="userPhotos-comment">
-                  <div className="userPhotos-commentHeader">
-                    <div className="userPhotos-commentHeaderLink">
-                      <Link to={`/users/${comment.user._id}`}>{comment.user.first_name + " " + comment.user.last_name}</Link>
-                    </div>
-                    <div className="userPhotos-commentHeaderP">
-                      <p>{formatDate(comment.date_time)}</p>
+                  <div>
+                    {currentUser._id === comment.user._id && (
+                      <div className="delete-comment">
+                        <img className="delete-comment-icon" src="images\trash-can.png" onClick={() => handleCommentDelete(comment._id, photo._id)}/>
+                      </div>
+                    )}
+                    <div className="userPhotos-commentHeader">
+                      <div className="userPhotos-commentHeaderLink">
+                        <Link to={`/users/${comment.user._id}`}>{comment.user.first_name + " " + comment.user.last_name}</Link>
+                      </div>
+                      <div className="userPhotos-commentHeaderP">
+                        <p>{formatDate(comment.date_time)}</p>
+                      </div>
                     </div>
                   </div>
                   <div>

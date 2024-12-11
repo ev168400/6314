@@ -17,7 +17,8 @@ function UserList() {
   const {currentUser} = useContext(CurrentUserContext);
 
   useEffect(() => {
-    axios.get('http://localhost:3000/user/list')
+    if(currentUser !== null){
+      axios.get('http://localhost:3000/user/list')
       .then(result => {
         setUserList(result.data);
       })
@@ -25,13 +26,17 @@ function UserList() {
         setUserList([]);
         console.error(error.response.data.error);
       });
+    }else{
+      setUserList([]);
+    }
+    
   },[currentUser]);
  
   return (
     <div>
       <Typography variant="h5">
         User List
-      </Typography>
+      </Typography> 
       <List component="nav">
           {users.map(user => (
             <div key={user._id}>

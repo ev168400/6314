@@ -14,7 +14,6 @@
     flex-direction: row; 
     align-items: center;
     justify-content: space-between;
-
 }
 .userPhotos-commentHeaderP{
     width: fit-content;
@@ -62,4 +61,40 @@
     font-weight: bolder;
 }
 
- 
+.delete-Photo{
+    display: flex;
+    justify-content: flex-end;
+}
+
+.delete-photo-icon{
+    width: 25px;
+    height: 25px;
+}
+
+.delete-photo-icon:hover{
+    cursor:pointer;
+    width: 30px;
+    height: 30px;
+}
+
+.delete-comment-icon{
+    width: 10px;
+    height: 10px;
+    margin-left: 5px;
+}
+
+.delete-comment-icon:hover{
+    cursor:pointer;
+    width: 15px;
+    height: 15px;
+}
+
+.delete-comment{
+    display: flex;
+    justify-content: flex-end;
+}
+
+.userPhotos-photo-header{
+    display: flex;
+    justify-content: space-between;
+}
