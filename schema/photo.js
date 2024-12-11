@@ -11,6 +11,8 @@ const mentionSchema = new mongoose.Schema({
   comment: String,
   // The ID of the user who was mentioned in the comment.
   mentioned_id: mongoose.Schema.Types.ObjectId,
+  // The ID of the use who created the comment
+  commenter_id: mongoose.Schema.Types.ObjectId,
 });
 
 /**

@@ -94,3 +94,41 @@
     margin-left: 1rem;
 }
 
+.userDetail-delete-profile-button, .userDetail-cancel-delete-button{
+    border-radius: .5rem;
+    justify-content: center;
+    border: 0;
+    cursor: pointer;
+    font-size: medium;
+    padding: 0.5rem;
+    width:fit-content;
+    color: white;
+    margin-bottom: 0.5rem;
+}
+.userDetail-delete-profile-button{
+    background: red;
+}
+
+.userDetail-cancel-delete-button{
+    background: #6495ED;
+}
+
+.userDetail-delete-profile{
+    display: flex;
+    justify-content: flex-end;
+}
+
+.userDetails-Warning-Options{
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.userDetail-Warning{
+    background: white;
+    color: black;
+    border-radius: 0.5rem;
+    border: 1px solid black;
+    text-align: center;
+}
+
+

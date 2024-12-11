@@ -222,7 +222,8 @@ app.get("/mentionsOfUser/:id", async function (request, response) {
           let newMention = {
             _id: mention._id,
             comment: mention.comment,
-            photo: photo
+            photo: photo,
+            commenter_id: mention.commenter_id
           };
           mentionedPhotos.push(newMention);
         }
@@ -390,7 +391,8 @@ app.post('/mention/:photo_id', async (request, response) => {
     const newMention = {
       _id: new mongoose.Types.ObjectId(),
       comment: mention.comment,
-      mentioned_id: mention.mentioned_id
+      mentioned_id: mention.mentioned_id,
+      commenter_id: mention.commenter_id
     }; 
     newMention._id = newMention._id.toString();
     photo.mentions.push(newMention);
@@ -442,6 +444,122 @@ app.post('/photos/new', (request, response) => {
     }
 
   });
+});
+
+// URL /photo/:photo_id - Deletes a single photo made by the logged in user including all comments and mentions
+app.delete('/photo/:photo_id', async (request, response) =>{
+  const { photo_id } = request.params;
+  try{
+    const photo = await Photo.findById(photo_id);
+
+    if (!photo) {
+      return response.status(404).json({ message: 'Photo not found' });
+    }
+
+    await Photo.updateOne(
+      { _id: photo_id },
+      { $set: { comments: [], mentions:[] } }  
+    );
+
+    await Photo.deleteOne({ _id: photo_id });
+    return response.status(200).json({ message: 'Photo deleted successfully'});
+  }catch(error){
+    console.error('Error deleting photo:', error);
+    return response.status(500).json({ error: 'Error deleting photo' });
+  }
+});
+
+// URL /photo/:photo_id/comment/:comment_id - Deletes a single comment made by the logged in user and references to it in mentions
+app.delete('/photo/:photo_id/comment/:comment_id', async (request, response) =>{
+  const { comment_id, photo_id } = request.params;
+  try{
+    const photo = await Photo.findById(photo_id);
+
+    if (!photo) {
+      return response.status(404).json({ message: 'Photo not found' });
+    }
+
+    let commentOnPhoto;
+    if(photo.comments){
+      for(let com of photo.comments){
+        if(com._id === comment_id){
+          commentOnPhoto = com.comment;
+        }
+      }
+    }
+
+    let mentionFromCommentId;
+    if(photo.mentions){
+      for(let mention of photo.mentions){
+        if(mention.comment === commentOnPhoto){
+          mentionFromCommentId = mention._id;
+        }
+      }
+    }
+
+    //Delete all mentions derived from this comment
+    await Photo.updateOne(
+      { _id: photo_id }, 
+      { $pull: { mentions: { _id: mentionFromCommentId } } } 
+    );
+
+    await Photo.updateOne(
+      { _id: photo_id },
+      { $pull: { comments: { _id: comment_id } } }
+    );
+
+    
+    return response.status(200).json({ message: 'Comment deleted successfully'});
+
+  }catch(error){
+    console.error('Error deleting comment:', error);
+    return response.status(500).json({ error: 'Error deleting comment' });
+  }
+
+});
+
+// URL /deleteUser/:user_id - Deletes a single comment made by the logged in user
+app.delete('/deleteUser/:user_id', async (request, response) =>{
+  const { user_id } = request.params;
+
+  try{
+    //Delete all comments on other users posts
+    await Photo.updateMany(
+      { "comments.user_id": user_id }, 
+      { $pull: { comments: { user_id: user_id } } } 
+    );
+
+    //Delete all mentions of user on other users posts
+    await Photo.updateMany(
+      { "mentions.mentioned_id": user_id }, 
+      { $pull: { mentions: { mentioned_id: user_id } } } 
+    );
+
+    //Delete all mentions of others
+    await Photo.updateMany(
+      { "mentions.commenter_id": user_id }, 
+      { $pull: { mentions: { commenter_id: user_id } } } 
+    );
+
+    //Delete all comments on own post
+    await Photo.updateMany(
+      { user_id: user_id }, 
+      { $pull: { comments: { user_id: user_id } } } 
+    );
+
+    //Delete all post
+    await Photo.deleteMany({ user_id: user_id }); 
+
+
+    //Delete profile
+    await User.findByIdAndDelete(user_id); 
+    return response.status(200).json({ message: 'Profile deleted successfully'});
+
+  }catch(error){
+    console.error('Error deleting profile:', error);
+    return response.status(500).json({ error: 'Error deleting profile' });
+  }
+
 });
 
 const server = app.listen(3000, function () {
