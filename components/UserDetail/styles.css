@@ -18,7 +18,7 @@
     font-weight: bold;
 }
 
-.userDetail-mentions{
+.userDetail-mentions, .userDetail-posts{
     font-size: larger;
     font-weight: bold;
     margin-top: 25px;
@@ -51,7 +51,7 @@
     color: white;
 }
 
-.userDetail-mention-Photo {
+.userDetail-mention-Photo, .userDetail-recent-Photo {
     width: 100px;
     height: 100px; 
     object-fit: cover; 
@@ -59,11 +59,11 @@
     margin-top: 0.5rem;
 }
 
-.userDetail-mention-Photo:hover {
+.userDetail-mention-Photo:hover, .userDetail-recent-Photo:hover {
     border: 3px solid rgba(25,118,210, 1);
 }
 
-.userDetail-mention-Photo-Header{
+.userDetail-mention-Photo-Header, .userDetail-recent-Photo-Header{
     margin: 0.5rem auto 0.5rem 0.5rem;
     font-weight: lighter;
 }
@@ -86,7 +86,7 @@
     width: 100%;
 }
 
-.userDetail-noMention{
+.userDetail-noMention, .userDetail-noPosts{
     padding-left: 1rem;
 }
 

@@ -7,21 +7,35 @@ import { CurrentUserContext } from "../context/context.js";
 
 function UserDetail({ userId }) {
   const [user, setUser] = useState({});
+  const [recentPost, setRecentPost] = useState(undefined);
+  const [mostComments, setMostComments] = useState(undefined);
   const [mentions, setMentions] = useState([]);
   const [warning, setWarning] = useState(false);
   const [photoUsers, setPhotoUsers] = useState({});
   const { currentUser, setCurrentUser } = useContext(CurrentUserContext);
 
   useEffect(() => {
-    // Fetch user details
-    axios.get(`http://localhost:3000/user/${userId}`)
-      .then(result => setUser(result.data))
-      .catch(error => console.error(error));
+    // Get user data, mentioned post, most recent post, and post with the most comments
+    const fetchUser = async () => {
+      try {
+        const promises = [
+          axios.get(`http://localhost:3000/user/${userId}`),
+          axios.get(`http://localhost:3000/mentionsOfUser/${userId}`),
+          axios.get(`http://localhost:3000/topPhotos/${userId}`),
+        ];
+  
+        const [userResponse, mentionsResponse, photosResponse] = await Promise.all(promises);
 
-    // Fetch mentions of the user
-    axios.get(`http://localhost:3000/mentionsOfUser/${userId}`)
-      .then(result => setMentions(result.data))
-      .catch(error => console.error(error));
+        setUser(userResponse.data);
+        setMentions(mentionsResponse.data);
+        setRecentPost(photosResponse.data.mostRecent);
+        setMostComments(photosResponse.data.mostComments);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+  
+    fetchUser();
   }, [userId]);
 
   useEffect(() => {
@@ -71,6 +85,12 @@ function UserDetail({ userId }) {
       fetchPhotoUsersAndCommenters();
     }
   }, [mentions, photoUsers]);  
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const options = { year: 'numeric', month: 'long', day: 'numeric', hour12: true, hour: '2-digit', minute: '2-digit' };
+    return `${date.toLocaleTimeString('en-US', options)}`;
+  };
 
   const formatPhotoHeader = (index) => {
     const mention = mentions[index];
@@ -184,8 +204,61 @@ function UserDetail({ userId }) {
           </Grid>
           <Grid item xs={6} className="userDetail">
             {user.location}
+          </Grid><Grid item xs={12} />
+          <Grid item xs={12} className="userDetail-posts">
+            Top Posts
           </Grid>
-          <Grid item xs={12} />
+          <Divider sx={{ width: "100%" }} />
+          {typeof recentPost !== "undefined"  && typeof mostComments !== "undefined" && (
+          <>
+          {console.log(typeof recentPost)}
+            <Grid item xs={12} />
+            <Grid item xs={9} className="userDetail-recent">
+              <h4 className="userDetail-recent-Photo-Header">
+                <strong>Most recent post:</strong> {formatDate(recentPost.date_time)}
+              </h4>
+            </Grid>
+            <Grid item xs={2}>
+              <Link to={`/photos/${recentPost.user_id}#photo-${recentPost._id}`}>
+                <img
+                  src={`/images/${recentPost.file_name}`}
+                  className="userDetail-recent-Photo"
+                />
+              </Link>
+            </Grid>
+            <Grid item xs={1} />
+            {mostComments.comments && mostComments.comments.length > 0 && (
+            <>
+              <Grid item xs={9} className="userDetail-recent">
+              
+                <h4 className="userDetail-recent-Photo-Header">
+                  <strong>Most commented post:</strong> {mostComments.comments.length} {mostComments.comments.length > 1 ? " comments" : " comment"} 
+                </h4>
+              </Grid>
+              <Grid item xs={2}>
+                <Link to={`/photos/${mostComments.user_id}#photo-${mostComments._id}`}>
+                  <img
+                    src={`/images/${mostComments.file_name}`}
+                    className="userDetail-recent-Photo"
+                  />
+                </Link>
+              </Grid>
+              <Grid item xs={1} />
+            </>
+            )}
+            {mostComments.comments.length === 0 &&(
+              <>
+                <Grid item xs={9} className="userDetail-recent">
+                  <h4 className="userDetail-recent-Photo-Header">
+                  <strong>Most commented post:</strong> All posts have no comments 
+                  </h4>
+                </Grid>
+                <Grid item xs={3} />
+              </>
+            )}
+          </>
+          )}
+          {typeof recentPost === "undefined" && <p className="userDetail-noPosts">User has no posts</p>}
           <Grid item xs={12} className="userDetail-mentions">
             Mentions
           </Grid>
