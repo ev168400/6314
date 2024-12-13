@@ -208,6 +208,48 @@ app.get("/photosOfUser/:id", async function (request, response) {
 });
 
 /**
+ * URL /topPhotos/:id - Returns the most recent and most commented Photos for User (id).
+ */
+app.get("/topPhotos/:id", async function (request, response) {
+  const id = request.params.id;
+  try{
+    var userPhotos;
+    userPhotos = await Photo.find({user_id: id}, {_id:1, user_id:1, comments:1, file_name:1, date_time:1}).lean();
+    var mostRecent;
+    var mostComments;
+    var firstPhoto = true;
+    for(let photo of userPhotos){
+      if(firstPhoto){
+        mostRecent = photo;
+        firstPhoto=false;
+      }else if(photo.date_time < mostRecent.date_time){
+        mostRecent=photo; 
+      }else{
+        continue;
+      }
+    }
+    firstPhoto = true;
+    for(let photo of userPhotos){
+      if(firstPhoto){
+        mostComments = photo;
+        firstPhoto=false;
+      }else if (photo.comments && (!mostRecent.comments || photo.comments.length > mostComments.comments.length)) {
+          mostComments = photo;
+      }
+    }
+    let topPhotos = {
+      mostRecent: mostRecent,
+      mostComments: mostComments
+    };
+    return response.status(200).send(topPhotos);
+  }catch(err){
+    console.log(err);
+    console.log("Photos for user with _id:" + id + " were not found.");
+    return response.status(400).send("Photos for user with _id:" + id + " were not found.");
+  }
+});
+
+/**
  * URL /mentionsOfUser/:id - Returns all photos with mentions of User (id).
  */
 app.get("/mentionsOfUser/:id", async function (request, response) {
