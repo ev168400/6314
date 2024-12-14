@@ -49,6 +49,8 @@ const fs = require("fs");
 const User = require("./schema/user.js");
 const Photo = require("./schema/photo.js");
 const SchemaInfo = require("./schema/schemaInfo.js");
+//load custom schema for activities of users
+const Activity = require("./schema/activity.js");
 
 
 const processFormBody = multer({storage: multer.memoryStorage()}).single('uploadedphoto');
@@ -304,6 +306,13 @@ app.post('/admin/login', async (request, response) => {
   
   request.session.user = user;
   request.session.save();
+
+  //log new activity
+  await Activity.create({
+    user_id: user._id,
+    type: 'login',
+  });
+
   return response.json({ _id: user._id, first_name: user.first_name, last_name: user.last_name });
 });
 
@@ -311,14 +320,21 @@ app.post('/admin/logout', (request, response) => {
   if(!request.session.user){
     return response.status(400).json({ error: 'Nobody is logged in' });
   }
-  try {
-    request.session.user = null;
-    request.session.destroy();
-    return response.redirect('/');
-  } catch (err) {
-    console.error('Unexpected error:', err);
-    return response.status(500).json({ error: 'Server error' }); 
-  }
+
+  //log new activity
+  Activity.create({
+    user_id: request.session.user._id,
+    type: 'logout',
+  })
+    .then(() => {
+      request.session.user = null;
+      request.session.destroy();
+      return response.redirect('/');
+    })
+    .catch((err) => {
+      console.error('Unexpected error:', err);
+      return response.status(500).json({ error: 'Server error' });
+    });
 });
 
 app.post('/user', async (request, response) => {
@@ -373,6 +389,13 @@ app.post('/user', async (request, response) => {
       " with ID ",
       user.objectID
     );
+
+    //log new activity
+    await Activity.create({
+      user_id: newUser._id,
+      type: 'register',
+    });
+
     return response.json(user);
   }catch(err){
     return response.status(400).json({error: "Error creating the user"});
@@ -408,6 +431,12 @@ app.post('/commentsOfPhoto/:photo_id', async (request, response) => {
     };
     photo.comments.push(newComment);
     await photo.save();
+
+    //log new activity
+    await Activity.create({
+      user_id: req.session.user._id,
+      type: 'comment',
+    });
 
     return response.status(200).json({ message: 'Comment added successfully', newComment });
   } catch (error) {
@@ -477,6 +506,13 @@ app.post('/photos/new', (request, response) => {
 
       // Save the photo 
       await newPhoto.save();
+
+      //log new activity
+      await Activity.create({
+        user_id: req.session.user._id,
+        type: 'photo',
+        photo: { file_name: filename },
+      });
 
       // Respond to the client
       return response.status(200).send({ success: true, photo: newPhoto });
@@ -603,6 +639,28 @@ app.delete('/deleteUser/:user_id', async (request, response) =>{
   }
 
 });
+
+// URL /user/activities - Returns most recent activity for each user
+app.get("/user/activities", async function (request, response) {
+  try {
+    //get all user id's
+    const userList = await User.find({}, { _id: 1 }).lean();
+
+    //get most recent activity for each user
+    const userActivities = await Promise.all(userList.map(async (user) => {
+      const recentActivity = await Activity.findOne({ user_id: user._id })
+        .sort({ timestamp: -1 }) //sort activities by most recent
+        .lean();
+      return { user_id: user._id, recentActivity };
+    }));
+
+    return response.status(200).json(userActivities);
+  } catch (error) {
+    console.error("Error getting user activities:", error);
+    return response.status(500).json({ error: 'Error getting user activities' });
+  }
+});
+
 
 const server = app.listen(3000, function () {
   const port = server.address().port;
