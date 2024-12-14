@@ -20,7 +20,13 @@ function UserList() {
     if(currentUser !== null){
       axios.get('http://localhost:3000/user/list')
       .then(result => {
-        setUserList(result.data);
+        //put current user at top of list
+        const sortedUsers = result.data.sort((a, b) => {
+          if (a._id === currentUser._id) return -1;
+          if (b._id === currentUser._id) return 1;
+          return 0;
+        });
+        setUserList(sortedUsers);
       })
       .catch(error => {
         setUserList([]);
