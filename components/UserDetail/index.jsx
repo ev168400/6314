@@ -211,7 +211,6 @@ function UserDetail({ userId }) {
           <Divider sx={{ width: "100%" }} />
           {typeof recentPost !== "undefined"  && typeof mostComments !== "undefined" && (
           <>
-          {console.log(typeof recentPost)}
             <Grid item xs={12} />
             <Grid item xs={9} className="userDetail-recent">
               <h4 className="userDetail-recent-Photo-Header">

@@ -161,20 +161,17 @@ try {
  */
 app.get("/user/list", async function (request, response) {
   try{
-    var userList = await User.find({}, {_id:1, first_name:1, last_name:1});
+    var userList = await User.find({}, {_id:1, first_name:1, last_name:1, recentActivity:1});
     return response.status(200).send(userList);
   }catch(err){
     return response.status(500).send("Error fetching user list");
   }
 });
 
-/**
- * URL /user/:id - Returns the information for User (id).
- */
 app.get("/user/:id", async function (request, response) {
   const id = request.params.id;
   try{
-    var userDetail = await User.findById(id, '_id first_name last_name location description occupation').lean();
+    var userDetail = await User.findById(id, '_id first_name last_name location description occupation recentActivity').lean();
     return response.status(200).send(userDetail);
   }catch(err){
     console.log("User with _id:" + id + " not found.");
@@ -222,7 +219,7 @@ app.get("/topPhotos/:id", async function (request, response) {
       if(firstPhoto){
         mostRecent = photo;
         firstPhoto=false;
-      }else if(photo.date_time < mostRecent.date_time){
+      }else if(photo.date_time > mostRecent.date_time){
         mostRecent=photo; 
       }else{
         continue;
@@ -307,11 +304,16 @@ app.post('/admin/login', async (request, response) => {
   return response.json({ _id: user._id, first_name: user.first_name, last_name: user.last_name });
 });
 
-app.post('/admin/logout', (request, response) => {
+app.post('/admin/logout/:user_id', async (request, response) => {
   if(!request.session.user){
     return response.status(400).json({ error: 'Nobody is logged in' });
   }
   try {
+    const { user_id } = request.params;
+
+    const user = await User.findById(user_id, '_id first_name last_name location description occupation recentActivity');
+    user.recentActivity = "logout";
+    await user.save();
     request.session.user = null;
     request.session.destroy();
     return response.redirect('/');
@@ -365,6 +367,7 @@ app.post('/user', async (request, response) => {
       occupation: user.occupation,
       login_name: user.login_name,
       password: user.password,
+      recentActivity: "register",
     });
     user.objectID = newUser._id;
     console.log(
@@ -408,10 +411,32 @@ app.post('/commentsOfPhoto/:photo_id', async (request, response) => {
     };
     photo.comments.push(newComment);
     await photo.save();
-
     return response.status(200).json({ message: 'Comment added successfully', newComment });
   } catch (error) {
     console.error('Error adding comment:', error);
+    return response.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.post('/activity/:user_id', async (request, response) =>{
+  const { user_id } = request.params;
+  const { recentActivity  } = request.body;
+
+  try {
+    const user = await User.findById(user_id, '_id first_name last_name location description occupation recentActivity');
+    if (!user) {
+      return response.status(404).json({ error: 'User not found' });
+    }
+    
+    // Update recentActivity field
+    user.recentActivity = recentActivity;
+
+    // Save the updated user document
+    await user.save();
+
+    return response.status(200).send(user);
+  }catch(error){
+    console.log(error);
     return response.status(500).json({ error: 'Server error' });
   }
 });
@@ -477,7 +502,6 @@ app.post('/photos/new', (request, response) => {
 
       // Save the photo 
       await newPhoto.save();
-
       // Respond to the client
       return response.status(200).send({ success: true, photo: newPhoto });
     } catch (error) {
