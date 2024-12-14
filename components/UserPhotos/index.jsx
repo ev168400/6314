@@ -17,7 +17,7 @@ function UserPhotos({userId}) {
   const [newComments, setNewComments] = useState({});
   const [photoErrors, setPhotoErrors] = useState({});
   var [users, setUsers] = useState([]);
-  const { currentUser } = useContext(CurrentUserContext);
+  const { currentUser, setCurrentUser } = useContext(CurrentUserContext);
 
 
 
@@ -208,6 +208,11 @@ function UserPhotos({userId}) {
       setUserPhotos(result.data);
       // Clear the input for the commented photo
       setNewComments({ ...newComments, [photoId]: "" });
+
+      //Log the activity
+      const activityResult = await axios.post(`http://localhost:3000/activity/${currentUser._id}`, { recentActivity: "comment" });
+      setCurrentUser(activityResult.data);
+      
     } catch (error) {
       console.error("Error adding comment:", error);
       setPhotoErrors((prevErrors) => ({
@@ -235,7 +240,7 @@ function UserPhotos({userId}) {
                   <img className="delete-photo-icon" src="images\trash-can.png" onClick={() => handlePhotoDelete(photo._id)}/>
               )}
             </div>
-            <img src={`/images/${photo.file_name}`} id={`photo-${photo._id}`}/>
+            <img src={`/images/${photo.file_name}`} id={`photo-${photo._id}`} className="userPhotos-photo"/>
             {"comments" in photo && (
               photo.comments.map(comment => (
                 <div key={comment._id} className="userPhotos-comment">

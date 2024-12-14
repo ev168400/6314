@@ -25,6 +25,11 @@ function LoginRegister(){
             .then(response => {
                 console.log('Login successful:', response.data);
                 setCurrentUser(response.data);
+                axios.post(`http://localhost:3000/activity/${response.data._id}`, { recentActivity: "login" })
+                .then(activityResponse => {
+                    console.log("Login Activity logged: ");
+                    setCurrentUser(activityResponse.data);
+                });
                 navigate(`/users/${response.data._id}`);
             })
             .catch(error => {
@@ -54,7 +59,13 @@ function LoginRegister(){
                     field.value = "";
                 });
                 setErrorExist(false);
-            })
+                axios.post('/admin/login', { login_name: loginNameInput, password: passwordInput })
+                .then(loginResponse => {
+                    console.log('Login after registration successful:', loginResponse.data);
+                    setCurrentUser(loginResponse.data);
+                    navigate(`/users/${loginResponse.data._id}`);
+                });
+            }) 
             .catch(error => {
                 setErrorExist(true);
                 setErrorMessage(error.response.data.error.replace(/_/g, ' '));

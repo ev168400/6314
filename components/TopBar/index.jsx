@@ -6,7 +6,6 @@ import "./styles.css";
 
 import { CurrentUserContext } from "../context/context.js";
 
-
 function TopBar({ onPhotoUploaded }) {
   const [current, setCurrent] = useState("");
   const [loggedIn, setLoggedIn] = useState("Please Login");
@@ -19,7 +18,7 @@ function TopBar({ onPhotoUploaded }) {
 
   function handleLogout() {
     axios
-      .post("/admin/logout")
+      .post(`/admin/logout/${currentUser._id}`)
       .then(() => {
         console.log("Logout successful");
         setCurrentUser(null);
@@ -30,6 +29,7 @@ function TopBar({ onPhotoUploaded }) {
       });
   }
 
+  // Runs when location or currentUser changes
   useEffect(() => {
     const parts = location.pathname.split("/");
     if (currentUser) {
@@ -38,11 +38,13 @@ function TopBar({ onPhotoUploaded }) {
         axios
           .get(`http://localhost:3000/user/${userid}`)
           .then((result) => {
-            setCurrent(
-              parts[parts.length - 2] === "photos"
-                ? "Photos of " + result.data.first_name + " " + result.data.last_name
-                : result.data.first_name + " " + result.data.last_name + "'s Profile"
-            );
+            const newCurrent = parts[parts.length - 2] === "photos"
+              ? "Photos of " + result.data.first_name + " " + result.data.last_name
+              : result.data.first_name + " " + result.data.last_name + "'s Profile";
+            
+            if (newCurrent !== current) {
+              setCurrent(newCurrent);
+            }
           })
           .catch((error) => {
             console.error(error);
@@ -51,7 +53,10 @@ function TopBar({ onPhotoUploaded }) {
         axios
           .get("http://localhost:3000/test/info")
           .then((result) => {
-            setCurrent("Version " + result.data.__v);
+            const newCurrent = "Version " + result.data.__v;
+            if (newCurrent !== current) {
+              setCurrent(newCurrent);
+            }
           })
           .catch((error) => {
             console.error(error);
@@ -60,22 +65,23 @@ function TopBar({ onPhotoUploaded }) {
     } else {
       setCurrent("");
     }
-  }, [location, currentUser]);
+  }, [location, currentUser, current]); 
 
   useEffect(() => {
     if (currentUser !== null) {
       setLoggedIn(`Hi ${currentUser.first_name}`);
-    }else{
+    } else {
       setLoggedIn("Please Login");
     }
-  }, [currentUser]);
-  
+  }, [currentUser]); 
+
   function showSuccess(){
     setFileUploaded(true);
     setTimeout(() => {
       setFileUploaded(false);
     }, 3000);
   }
+
   function showFailure(){
     setFileFailure(true);
     setTimeout(() => {
@@ -87,20 +93,19 @@ function TopBar({ onPhotoUploaded }) {
     const file = e.target.files[0];
     if (file) {
       setFileName(file.name); 
-    }else{
+    } else {
       showFailure();
     }
   };
 
-  const handleUploadButtonClicked = (e) => {
+  const handleUploadButtonClicked = async (e) => {
     e.preventDefault();
     if (uploadInput.current.files.length > 0) {
       const domForm = new FormData();
       console.log(uploadInput.current.files[0]);
       domForm.append("uploadedphoto", uploadInput.current.files[0]);
 
-      axios
-        .post("/photos/new", domForm)
+      axios.post("/photos/new", domForm)
         .then((res) => {
           console.log("Photo uploaded successfully:", res.data);
           showSuccess();
@@ -113,6 +118,10 @@ function TopBar({ onPhotoUploaded }) {
           console.error("Error uploading photo:", err);
           showFailure();
         });
+
+        //Log the activity
+      const activityResult = await axios.post(`http://localhost:3000/activity/${currentUser._id}`, { recentActivity: "posted" });
+      setCurrentUser(activityResult.data);
     }
   };
 

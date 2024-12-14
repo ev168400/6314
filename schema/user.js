@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema({
   location: String,
   description: String,
   occupation: String,
+  recentActivity: String,
 });
 
 /**

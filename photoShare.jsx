@@ -13,7 +13,7 @@ import { CurrentUserContext } from "./components/context/context";
 
 function UserDetailRoute() {
   const {userId} = useParams();
-  console.log("UserDetailRoute: userId is:", userId);
+  //console.log("UserDetailRoute: userId is:", userId);
   return <UserDetail userId={userId} />;
 }
 
