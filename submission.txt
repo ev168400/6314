@@ -7,8 +7,8 @@ Story number and name: 1 - Extend User profile detail with usage
 Story points: 3
 Brief description to see the story in action:
 Visit user profile page to view most recent post and most commented on post.
-Thumbmails link to photo and scroll to destination. 
-If no photo exist for a user, an appropriate message is shown.
+Thumbnails link to photo and scroll to destination. 
+If no photos exist for a user, an appropriate message is shown.
 If no photos have any comments, the most recent photo will be shown, 
 but an appropriate message is shown for highest commented photo.
 
@@ -34,7 +34,7 @@ Click the trash can to delete the comment or post.
 Navigate to logged in user profile page where a 'delete profile' button can be found in the bottom right.
 Click the button, a warning will appear ensuring user wants delete profile.
 Select delete to delete page, will be redirected to login page.
-Selectcancel to if you do not want to delete page.
+Select cancel if you do not want to delete page.
 
 
 Story number and name: 8 - sidebar list marks users with new activity
